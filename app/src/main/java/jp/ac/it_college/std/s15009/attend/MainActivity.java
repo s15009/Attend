@@ -73,9 +73,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         dataope = new DatabaseOperation(mDbhelper);
 
-        check = (Button) findViewById(R.id.state_button);
-        check.setOnClickListener(this);
-
         SQLiteDatabase db = mDbhelper.getWritableDatabase();
         db.close();
 
@@ -208,20 +205,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
 
-        if (view != null) {
-            switch (view.getId()) {
-                case R.id.state_button:
-                    if (isChecked) {
-                        check.setText("登校");
-                        isChecked = false;
-                    } else {
-                        check.setText("下校");
-                        isChecked = true;
-                    }
-                    break;
-                default:
-            }
-        }
     }
 
 

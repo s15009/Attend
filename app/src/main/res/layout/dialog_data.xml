@@ -13,7 +13,9 @@
     <EditText
         android:id="@+id/student_id"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:maxLength="15" />
 
     <TextView
         android:text="@string/name"
@@ -23,6 +25,7 @@
     <EditText
         android:id="@+id/name"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:maxLength="15" />
 
 </LinearLayout>

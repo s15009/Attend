@@ -131,12 +131,15 @@ public class DatabaseOperation {
     //時間取得 例外投げるよ
     public void get_current_time() throws ParseException{
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd kk:mm:ss");
-        SimpleDateFormat test = new SimpleDateFormat("ss");
 
         Calendar calendar = Calendar.getInstance();
-        String now = sdf.format(calendar.getTime());
-        Date current = sdf.parse(now);
-        Log.d("time", now.toString());
+        //String now = sdf.format(calendar.getTime());
+        long now = calendar.getTimeInMillis();
+        Log.d("time", now + " ");
+        Calendar cale = Calendar.getInstance();
+        cale.setTimeInMillis(now);
+        String nono = sdf.format(cale.getTime());
+        Log.d("time", nono);
     }
 
 
