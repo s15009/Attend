@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Attend</string>
+    <string name="student_num">学籍番号:</string>
+    <string name="name">名前:</string>
+</resources>
