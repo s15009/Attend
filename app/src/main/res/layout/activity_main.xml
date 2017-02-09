@@ -23,9 +23,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="時刻予定"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
+            android:text="@string/time_plan"
             android:textSize="35sp"
             android:id="@+id/current_time"
             android:elevation="1dp"
@@ -34,13 +32,12 @@
             android:paddingTop="50dp"
             android:layout_columnSpan="2" />
         <ToggleButton
-            android:text="下校"
+            android:text="@string/back_school"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/backschool_button"
-            android:textOff="下校"
-            android:textOn="下校"
-            android:layout_alignParentEnd="true"
+            android:textOff="@string/back_school"
+            android:textOn="@string/back_school"
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_gravity="fill"
@@ -48,20 +45,19 @@
             android:textSize="36sp"
             android:background="@drawable/toggle_button_back_school" />
         <ToggleButton
-            android:text="登校"
+            android:text="@string/attend"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/attending_button"
-            android:textOff="登校"
-            android:textOn="登校"
-            android:layout_below="@+id/current_time"
-            android:layout_alignParentStart="true"
+            android:textOff="@string/attend"
+            android:textOn="@string/attend"
             android:layout_columnWeight="1"
             android:layout_rowWeight="1"
             android:layout_gravity="fill"
             android:padding="60dp"
             android:textSize="36sp"
-            android:background="@drawable/toggle_button_attend" />
+            android:background="@drawable/toggle_button_attend"
+            android:checked="true" />
 
     </GridLayout>
 

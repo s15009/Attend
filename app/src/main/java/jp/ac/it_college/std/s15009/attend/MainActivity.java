@@ -17,9 +17,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -32,7 +33,8 @@ import jp.ac.it_college.std.s15009.attend.Database.DataStr;
 import jp.ac.it_college.std.s15009.attend.Database.DatabaseOperation;
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity
+        implements CompoundButton.OnCheckedChangeListener {
 
     private IntentFilter[] intentFilters;
     private String[][] techlistarray;
@@ -40,8 +42,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private NfcAdapter nfcAdapter;
     private boolean isChecked = true;
     private Handler mHandler;
-    private Button check;
     private DatabaseOperation dataope;
+    private ToggleButton attend;
+    private ToggleButton back_school;
     private SimpleDateFormat sdf =
             new SimpleDateFormat("yyyy'年'MM'月'dd'日' kk'時'mm'分'ss'秒'");
 
@@ -72,6 +75,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         AttendDBHelper mDbhelper = new AttendDBHelper(getApplicationContext());
 
         dataope = new DatabaseOperation(mDbhelper);
+
+        attend = (ToggleButton)findViewById(R.id.attending_button);
+        back_school = (ToggleButton)findViewById(R.id.backschool_button);
+
+        attend.setOnCheckedChangeListener(this);
+        back_school.setOnCheckedChangeListener(this);
 
         SQLiteDatabase db = mDbhelper.getWritableDatabase();
         db.close();
@@ -201,11 +210,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    //button event
     @Override
-    public void onClick(View view) {
-
+    public void onCheckedChanged(CompoundButton compButton, boolean state) {
+        switch (compButton.getId()){
+            case R.id.attending_button:
+                if(state){
+                    isChecked = true;
+                    back_school.setChecked(false);
+                } else {
+                    isChecked = false;
+                    back_school.setChecked(true);
+                }
+                break;
+            case R.id.backschool_button:
+                if (state){
+                    isChecked = false;
+                    attend.setChecked(false);
+                } else {
+                    isChecked = true;
+                    attend.setChecked(true);
+                }
+                break;
+        }
     }
-
-
 }
