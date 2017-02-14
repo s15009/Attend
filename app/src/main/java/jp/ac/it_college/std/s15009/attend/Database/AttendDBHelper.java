@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 
 /**
- * Created by s15009 on 17/02/02.
+ * DataBase helper
  */
 
 public class AttendDBHelper extends SQLiteOpenHelper {
@@ -26,7 +26,7 @@ public class AttendDBHelper extends SQLiteOpenHelper {
         public static final String TABLE_ATTEND = "attend_trans";
 
         public static final String STUDENT_FOREIGN = "student_foreign";
-        public static final String CURRENT_TIME = "current_time";
+        public static final String CURRENT_TIME = "current_time_ticking";
         public static final String ATTEND_FLAG = "attend_flag";
 
 
@@ -42,7 +42,7 @@ public class AttendDBHelper extends SQLiteOpenHelper {
     private String attend_table_create =
             "create table " + Columns.TABLE_ATTEND + "(" +
                     Columns.STUDENT_FOREIGN + " integer, " +
-                    Columns.CURRENT_TIME + " timestamp default (DATETIME('now','localtime')), " +
+                    Columns.CURRENT_TIME + " integer, " +
                     Columns.ATTEND_FLAG + " integer, " +
                     " foreign key(" + Columns.STUDENT_FOREIGN + ") references " +
                     Columns.TABLE_STUDENT + "(" + Columns.STUDENT_ID + "))";

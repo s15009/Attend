@@ -18,6 +18,7 @@ import jp.ac.it_college.std.s15009.attend.Database.AttendDBHelper.Columns;
  */
 public class DatabaseOperation {
     private AttendDBHelper mDbhelper;
+    private String format = "yyyy-MM-dd HH:mm:ss";
 
     public DatabaseOperation(AttendDBHelper helper) {
         this.mDbhelper = helper;
@@ -75,21 +76,22 @@ public class DatabaseOperation {
         }
     }
 
-    // TODO:transaction 日付の登録の仕方を変える
+    //transaction table 挿入
     public void Attend_scan(Integer idm, boolean isChecked) {
-        SQLiteDatabase db = mDbhelper.getWritableDatabase();
+
+        long now_minute = get_current_time();
+        Log.d("now", "time: " + now_minute);
 
         ContentValues values = new ContentValues();
 
         values.put(Columns.STUDENT_FOREIGN, idm);
+        values.put(Columns.CURRENT_TIME, now_minute);
         values.put(Columns.ATTEND_FLAG, isChecked);
 
         long ret;
 
-        try {
+        try (SQLiteDatabase db = mDbhelper.getWritableDatabase()) {
             ret = db.insert(Columns.TABLE_ATTEND, null, values);
-        } finally {
-            db.close();
         }
         if (ret == -1) {
             Log.d("database", "failed");
@@ -107,39 +109,49 @@ public class DatabaseOperation {
                 Columns.STUDENT_FOREIGN + " = " + num + " ORDER BY " +
                 Columns.CURRENT_TIME + " DESC";
 
-        Cursor c = db.rawQuery(sql, null);
+//        Cursor c = db.rawQuery(sql, null);
 
 
-//        String where = AttendDBHelper.Columns.STUDENT_FOREIGN + "=?";
-//        String[] args = {num};
-//        String[] columns = {Columns.STUDENT_FOREIGN, Columns.CURRENT_TIME, Columns.ATTEND_FLAG };
-//        Cursor c = db.query(AttendDBHelper.Columns.TABLE_ATTEND,
-//                null, where, args, null, null, Columns.CURRENT_TIME + " DESC");
+        String where = AttendDBHelper.Columns.STUDENT_FOREIGN + "=?";
+        String[] args = {num};
+        String[] columns = {Columns.STUDENT_FOREIGN, Columns.CURRENT_TIME, Columns.ATTEND_FLAG };
+        Cursor c = db.query(AttendDBHelper.Columns.TABLE_ATTEND,
+                null, where, args, null, null, Columns.CURRENT_TIME + " DESC");
 
         if (c.moveToFirst()) {
             do {
                 Integer cardid = c.getInt(c.getColumnIndex(Columns.STUDENT_FOREIGN));
-                String time = c.getString(c.getColumnIndex(Columns.CURRENT_TIME));
+                long time = c.getLong(c.getColumnIndex(Columns.CURRENT_TIME));
                 String flag = c.getString(c.getColumnIndex(Columns.ATTEND_FLAG));
+                String formattime = change_time_inmillis(time);
 
-                Log.d("test log", cardid + " " + time + " " + flag);
+                Log.d("test log", cardid + " " + formattime + " " + flag);
 
             } while (c.moveToNext());
         }
     }
 
-    //時間取得 例外投げるよ
-    public void get_current_time() throws ParseException{
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd kk:mm:ss");
+
+    private long get_current_time(){
 
         Calendar calendar = Calendar.getInstance();
-        //String now = sdf.format(calendar.getTime());
         long now = calendar.getTimeInMillis();
-        Log.d("time", now + " ");
+        return now;
+
+    }
+
+    private String change_time_inmillis(long minute){
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+
         Calendar cale = Calendar.getInstance();
-        cale.setTimeInMillis(now);
-        String nono = sdf.format(cale.getTime());
-        Log.d("time", nono);
+        cale.setTimeInMillis(minute);
+        String now = sdf.format(cale.getTime());
+
+
+
+//        String now = sdf.format(new Date(minute));
+
+        return now;
     }
 
 

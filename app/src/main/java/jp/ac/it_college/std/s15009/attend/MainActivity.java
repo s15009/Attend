@@ -144,11 +144,6 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
         nfcAdapter.disableForegroundDispatch(this);
 
-        try {
-            dataope.get_current_time();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
     }
 
     //id 変換
@@ -167,7 +162,7 @@ public class MainActivity extends AppCompatActivity
         return idm;
     }
 
-    //　TODO:新規カードがスキャンされたらdialog表示してＤＢに保存したい
+    //TODO:スキャンされた時の音入れたい
     private void Data_save_dialog(final String idm) {
 
         LayoutInflater layoutInflater = (LayoutInflater)
