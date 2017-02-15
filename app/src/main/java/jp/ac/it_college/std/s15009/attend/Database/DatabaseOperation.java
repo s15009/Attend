@@ -5,10 +5,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 
 import jp.ac.it_college.std.s15009.attend.Database.AttendDBHelper.Columns;
 
@@ -77,10 +75,29 @@ public class DatabaseOperation {
     }
 
     //transaction table 挿入
-    public void Attend_scan(Integer idm, boolean isChecked) {
+    public boolean Attend_scan(Integer idm, boolean isChecked){
+
+        //フラグ判定
+        switch (already_attend(idm)){
+            case 0:
+                //false
+                if(isChecked){
+                    break;
+                } else {
+                    return false;
+                }
+            case 1:
+                //true
+                if(!isChecked){
+                    break;
+                } else {
+                    return false;
+                }
+            default:
+                break;
+        }
 
         long now_minute = get_current_time();
-        Log.d("now", "time: " + now_minute);
 
         ContentValues values = new ContentValues();
 
@@ -90,14 +107,17 @@ public class DatabaseOperation {
 
         long ret;
 
-        try (SQLiteDatabase db = mDbhelper.getWritableDatabase()) {
+        try (SQLiteDatabase db = mDbhelper.getWritableDatabase()){
             ret = db.insert(Columns.TABLE_ATTEND, null, values);
         }
         if (ret == -1) {
             Log.d("database", "failed");
+            return false;
         } else {
             Log.d("database", "success");
+            return true;
         }
+
     }
 
     //トランザクションテーブル確認用
@@ -105,16 +125,16 @@ public class DatabaseOperation {
         SQLiteDatabase db = mDbhelper.getReadableDatabase();
         String num = id.toString();
 
-        String sql = "select * from " + Columns.TABLE_ATTEND + " where " +
-                Columns.STUDENT_FOREIGN + " = " + num + " ORDER BY " +
-                Columns.CURRENT_TIME + " DESC";
+//        String sql = "select * from " + Columns.TABLE_ATTEND + " where " +
+//                Columns.STUDENT_FOREIGN + " = " + num + " ORDER BY " +
+//                Columns.CURRENT_TIME + " DESC";
 
 //        Cursor c = db.rawQuery(sql, null);
 
 
         String where = AttendDBHelper.Columns.STUDENT_FOREIGN + "=?";
         String[] args = {num};
-        String[] columns = {Columns.STUDENT_FOREIGN, Columns.CURRENT_TIME, Columns.ATTEND_FLAG };
+        //String[] columns = {Columns.STUDENT_FOREIGN, Columns.CURRENT_TIME, Columns.ATTEND_FLAG };
         Cursor c = db.query(AttendDBHelper.Columns.TABLE_ATTEND,
                 null, where, args, null, null, Columns.CURRENT_TIME + " DESC");
 
@@ -129,6 +149,7 @@ public class DatabaseOperation {
 
             } while (c.moveToNext());
         }
+        c.close();
     }
 
 
@@ -147,12 +168,36 @@ public class DatabaseOperation {
         cale.setTimeInMillis(minute);
         String now = sdf.format(cale.getTime());
 
-
-
 //        String now = sdf.format(new Date(minute));
 
         return now;
     }
 
+    //２連続スキャン防止
+    private int already_attend(Integer id){
 
+        SQLiteDatabase db = mDbhelper.getReadableDatabase();
+        String num = id.toString();
+        int check_change;
+
+        String where = AttendDBHelper.Columns.STUDENT_FOREIGN + "=?";
+        String[] args = {num};
+        Cursor c = db.query(AttendDBHelper.Columns.TABLE_ATTEND,
+                null, where, args, null, null, Columns.CURRENT_TIME + " DESC limit 1");
+
+        if (c.moveToFirst()) {
+            do {
+                int flag = c.getInt(c.getColumnIndex(Columns.ATTEND_FLAG));
+                check_change = flag;
+
+                Log.d("flag", "flag is " + check_change);
+            } while (c.moveToNext());
+        } else {
+            //初回処理
+            return 2;
+        }
+        c.close();
+
+        return check_change;
+    }
 }

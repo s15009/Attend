@@ -7,11 +7,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.sqlite.SQLiteDatabase;
+import android.media.AudioAttributes;
+import android.media.SoundPool;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.NfcF;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,6 +23,7 @@ import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import java.text.ParseException;
@@ -47,6 +51,11 @@ public class MainActivity extends AppCompatActivity
     private ToggleButton back_school;
     private SimpleDateFormat sdf =
             new SimpleDateFormat("yyyy'年'MM'月'dd'日' kk'時'mm'分'ss'秒'");
+    private int scan_ok;
+    private int scan_ng;
+    private int ok_sound;
+    private int ng_sound;
+    private SoundPool soundPool;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +68,6 @@ public class MainActivity extends AppCompatActivity
         //インテントフィルター　newＩIntent に通知
         IntentFilter ndef = new IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED);
         ndef.addAction(NfcAdapter.ACTION_TECH_DISCOVERED);
-
         try {
             ndef.addDataType("text/plain");
         } catch (IntentFilter.MalformedMimeTypeException e) {
@@ -85,6 +93,20 @@ public class MainActivity extends AppCompatActivity
         SQLiteDatabase db = mDbhelper.getWritableDatabase();
         db.close();
 
+        //音声用
+        AudioAttributes attr = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_GAME)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+        soundPool = new SoundPool.Builder()
+                .setAudioAttributes(attr)
+                .setMaxStreams(2)
+                .build();
+
+        ok_sound = soundPool.load(getApplicationContext(),R.raw.scan_ok ,1);
+        ng_sound = soundPool.load(getApplicationContext(),R.raw.scan_ng ,1);
+
+
         //時刻表示
         mHandler = new Handler(getMainLooper());
         Timer timer = new Timer();
@@ -97,13 +119,11 @@ public class MainActivity extends AppCompatActivity
                         Calendar calendar = Calendar.getInstance();
                         String now = sdf.format(calendar.getTime());
 
-                        ((TextView) findViewById(R.id.current_time)).setText(now);
+                        ((TextView)findViewById(R.id.current_time)).setText(now);
                     }
                 });
             }
         }, 0, 1000);
-
-
     }
 
     @Override
@@ -117,7 +137,7 @@ public class MainActivity extends AppCompatActivity
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-        if (tag == null) {
+        if(tag == null){
             return;
         }
 
@@ -132,15 +152,34 @@ public class MainActivity extends AppCompatActivity
         } else {
             //ここはトランザクションテーブルに記録
             Integer Pkey = dataope.get_primary(id);
-            dataope.Attend_scan(Pkey, isChecked);
-            Log.d("scan", "出席したよ（仮）");
+
+            if(dataope.Attend_scan(Pkey, isChecked)){
+                //音だそう
+                Log.d("scan", "出席したよ（仮）");
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        soundPool.play(ok_sound, 1f, 1f, 0, 0, 1);
+                    }
+                }, 1000);
+                Toast.makeText(this, "出席したよ", Toast.LENGTH_SHORT);
+            } else {
+                Log.d("scan", "失敗したよ");
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        soundPool.play(ng_sound, 1f, 1f, 0, 0, 1);
+                    }
+                }, 1000);
+                Toast.makeText(this,"既に出席しています", Toast.LENGTH_SHORT).show();
+            }
             dataope.test_data(Pkey);
         }
 
     }
 
     @Override
-    protected void onPause() {
+    protected void onPause(){
         super.onPause();
         nfcAdapter.disableForegroundDispatch(this);
 
@@ -205,6 +244,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    //Toggle Button 系
     @Override
     public void onCheckedChanged(CompoundButton compButton, boolean state) {
         switch (compButton.getId()){
