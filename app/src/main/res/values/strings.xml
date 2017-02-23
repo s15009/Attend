@@ -5,4 +5,6 @@
     <string name="time_plan">時刻予定</string>
     <string name="back_school">下校</string>
     <string name="attend">登校</string>
+    <string name="ticking">--:--</string>
+    <string name="today_attend">本日の出席者</string>
 </resources>

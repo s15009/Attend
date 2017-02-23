@@ -6,7 +6,6 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
 import android.nfc.NfcAdapter;
@@ -16,6 +15,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,8 +27,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -51,11 +52,12 @@ public class MainActivity extends AppCompatActivity
     private ToggleButton back_school;
     private SimpleDateFormat sdf =
             new SimpleDateFormat("yyyy'年'MM'月'dd'日' kk'時'mm'分'ss'秒'");
-    private int scan_ok;
-    private int scan_ng;
+    private SimpleDateFormat month = new SimpleDateFormat("yyyy-MM-dd");
     private int ok_sound;
     private int ng_sound;
     private SoundPool soundPool;
+    private RecyclerView mRecycler;
+    private ArrayList<Stu_info> stu_data = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,23 +77,19 @@ public class MainActivity extends AppCompatActivity
         }
         intentFilters = new IntentFilter[]{ndef};
 
-        //スキャン出来るカードに種類？
+        //スキャン出来るカードの種類設定
         techlistarray = new String[][]{new String[]{NfcF.class.getName()}};
-
         nfcAdapter = NfcAdapter.getDefaultAdapter(getApplicationContext());
 
+        //database系
         AttendDBHelper mDbhelper = new AttendDBHelper(getApplicationContext());
-
         dataope = new DatabaseOperation(mDbhelper);
 
+        //Button達
         attend = (ToggleButton)findViewById(R.id.attending_button);
         back_school = (ToggleButton)findViewById(R.id.backschool_button);
-
         attend.setOnCheckedChangeListener(this);
         back_school.setOnCheckedChangeListener(this);
-
-        SQLiteDatabase db = mDbhelper.getWritableDatabase();
-        db.close();
 
         //音声用
         AudioAttributes attr = new AudioAttributes.Builder()
@@ -102,9 +100,18 @@ public class MainActivity extends AppCompatActivity
                 .setAudioAttributes(attr)
                 .setMaxStreams(2)
                 .build();
-
         ok_sound = soundPool.load(getApplicationContext(),R.raw.scan_ok ,1);
         ng_sound = soundPool.load(getApplicationContext(),R.raw.scan_ng ,1);
+
+        //recylerview 系 TODO:ここで日付出席サーチ
+        mRecycler = (RecyclerView)findViewById(R.id.recycler);
+        mRecycler.setLayoutManager(new LinearLayoutManager
+                (this, LinearLayoutManager.VERTICAL, false));
+        Dummydata();
+        RecyclerAdapter adapter = new RecyclerAdapter(this, stu_data);
+        mRecycler.setAdapter(adapter);
+
+
 
 
         //時刻表示
@@ -154,24 +161,26 @@ public class MainActivity extends AppCompatActivity
             Integer Pkey = dataope.get_primary(id);
 
             if(dataope.Attend_scan(Pkey, isChecked)){
-                //音だそう
-                Log.d("scan", "出席したよ（仮）");
+                Calendar ca = Calendar.getInstance();
+                String to = month.format(ca.getTime());
+                Log.d("time", "time is:" + to);
+                dataope.getData(to);
+                //サウンド再生
                 new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         soundPool.play(ok_sound, 1f, 1f, 0, 0, 1);
                     }
                 }, 1000);
-                Toast.makeText(this, "出席したよ", Toast.LENGTH_SHORT);
+                Toast.makeText(this, "出席しました", Toast.LENGTH_SHORT);
             } else {
-                Log.d("scan", "失敗したよ");
                 new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         soundPool.play(ng_sound, 1f, 1f, 0, 0, 1);
                     }
                 }, 1000);
-                Toast.makeText(this,"既に出席しています", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,"既にスキャン済みです", Toast.LENGTH_SHORT).show();
             }
             dataope.test_data(Pkey);
         }
@@ -201,7 +210,7 @@ public class MainActivity extends AppCompatActivity
         return idm;
     }
 
-    //TODO:スキャンされた時の音入れたい
+    //dialog
     private void Data_save_dialog(final String idm) {
 
         LayoutInflater layoutInflater = (LayoutInflater)
@@ -212,7 +221,7 @@ public class MainActivity extends AppCompatActivity
 
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
-        alert.setTitle("new data");
+        alert.setTitle("学生情報登録");
         alert.setView(layout);
         alert.setCancelable(false);
         alert.setPositiveButton("O K", new DialogInterface.OnClickListener() {
@@ -267,5 +276,27 @@ public class MainActivity extends AppCompatActivity
                 }
                 break;
         }
+    }
+
+    private void Dummydata(){
+        Stu_info in = new Stu_info();
+        in.setNum_stu("s15009");
+        in.setName_stu("前川和輝");
+        stu_data.add(in);
+
+        Stu_info in2 = new Stu_info();
+        in2.setNum_stu("s18006");
+        in2.setName_stu("田中太郎");
+        stu_data.add(in2);
+
+        Stu_info in3 = new Stu_info();
+        in3.setNum_stu("n19008");
+        in3.setName_stu("熱斗和悪");
+        stu_data.add(in3);
+
+        Stu_info in4 = new Stu_info();
+        in4.setNum_stu("c18010");
+        in4.setName_stu("栗瑛太");
+        stu_data.add(in4);
     }
 }

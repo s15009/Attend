@@ -4,11 +4,12 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
-
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import jp.ac.it_college.std.s15009.attend.Database.AttendDBHelper.Columns;
+import jp.ac.it_college.std.s15009.attend.Stu_info;
 
 
 /**
@@ -16,7 +17,9 @@ import jp.ac.it_college.std.s15009.attend.Database.AttendDBHelper.Columns;
  */
 public class DatabaseOperation {
     private AttendDBHelper mDbhelper;
-    private String format = "yyyy-MM-dd HH:mm:ss";
+    private String format_all = "yyyy-MM-dd HH:mm:ss";
+    private String month = "yyyy-MM-dd";
+    private ArrayList<Stu_info> data;
 
     public DatabaseOperation(AttendDBHelper helper) {
         this.mDbhelper = helper;
@@ -143,9 +146,9 @@ public class DatabaseOperation {
                 Integer cardid = c.getInt(c.getColumnIndex(Columns.STUDENT_FOREIGN));
                 long time = c.getLong(c.getColumnIndex(Columns.CURRENT_TIME));
                 String flag = c.getString(c.getColumnIndex(Columns.ATTEND_FLAG));
-                String formattime = change_time_inmillis(time);
+                String formattime = change_time_inmillis(time, format_all);
 
-                Log.d("test log", cardid + " " + formattime + " " + flag);
+                Log.d("test log", cardid + " " + formattime + " " + flag + " " + time);
 
             } while (c.moveToNext());
         }
@@ -153,6 +156,7 @@ public class DatabaseOperation {
     }
 
 
+    //現在時刻取得
     private long get_current_time(){
 
         Calendar calendar = Calendar.getInstance();
@@ -161,7 +165,8 @@ public class DatabaseOperation {
 
     }
 
-    private String change_time_inmillis(long minute){
+    //時間のフォーマット変換
+    private String change_time_inmillis(long minute, String format){
         SimpleDateFormat sdf = new SimpleDateFormat(format);
 
         Calendar cale = Calendar.getInstance();
@@ -189,8 +194,6 @@ public class DatabaseOperation {
             do {
                 int flag = c.getInt(c.getColumnIndex(Columns.ATTEND_FLAG));
                 check_change = flag;
-
-                Log.d("flag", "flag is " + check_change);
             } while (c.moveToNext());
         } else {
             //初回処理
@@ -199,5 +202,31 @@ public class DatabaseOperation {
         c.close();
 
         return check_change;
+    }
+
+    //data検索
+    public void getData(String daytime){
+        SQLiteDatabase db = mDbhelper.getReadableDatabase();
+
+        String sql = "select strftime('%Y-%m-%d', " + Columns.CURRENT_TIME + " " +
+                ", 'unixepoch', 'localtime') as " + Columns.CURRENT_FORMAT +
+                " from " + Columns.TABLE_ATTEND + " where " +
+                Columns.CURRENT_FORMAT + " = '" + daytime + "';";
+
+        Cursor c = db.rawQuery(sql, null);
+
+        if (c.moveToFirst()){
+            do{
+                String no = c.getString(c.getColumnIndex(Columns.CURRENT_FORMAT));
+
+                Log.d("get today", no);
+
+                //String fo = change_time_inmillis(no, month);
+
+//                if(fo.equals(daytime)){
+//                    Log.d("time", "time chage is " + fo);
+//                }
+            }while (c.moveToNext());
+        }
     }
 }

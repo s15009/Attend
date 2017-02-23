@@ -28,6 +28,7 @@ public class AttendDBHelper extends SQLiteOpenHelper {
         public static final String STUDENT_FOREIGN = "student_foreign";
         public static final String CURRENT_TIME = "current_time_ticking";
         public static final String ATTEND_FLAG = "attend_flag";
+        public static final String CURRENT_FORMAT = "current_format_ticking";
 
 
     }
